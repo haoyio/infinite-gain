@@ -6,10 +6,10 @@
 #define RIGHTPIN A1
 
 #define NVAL 10
-#define LTHRLO 400
-#define LTHRHI 750
-#define RTHRLO 550
-#define RTHRHI 850
+#define LTHRLO 700
+#define LTHRHI 1000
+#define RTHRLO 700
+#define RTHRHI 1000
 
 #define TAPE false
 #define NOTAPE true
@@ -21,13 +21,13 @@
 
 #define ENABLEL 5
 #define ENABLER 6
-#define DIRECTIONR 9
+#define DIRECTIONR 11
 #define DIRECTIONL 10
 
 #define ML_HIGH 255  //TODO: mod this until bot goes straight
 #define MR_HIGH 255  //TODO: mod this until bot goes straight
-#define ML_VEER 220  //TODO: mod this until bot veers enough
-#define MR_VEER 220  //TODO: mod this until bot veers enough
+#define ML_VEER 100  //TODO: mod this until bot veers enough
+#define MR_VEER 100  //TODO: mod this until bot veers enough
 #define ML_STOP 0
 #define MR_STOP 0
 
@@ -49,7 +49,13 @@
 #define MAIN_TIMER 0
 #define ONE_SEC 1000
 #define TIME_INTERVAL ONE_SEC
-#define BUMP HIGH
+#define BUMP 1
+
+// bump sensor variables
+#define BUMPPINRL 12
+#define BUMPPINRR 13
+#define BUMPPINFR 4
+#define BUMPPINFL 3
 
 // tape sensor module variables
 static int lvals[NVAL];
@@ -83,6 +89,8 @@ static bool onTape = false;
 // bumper module variables
 static bool flbump = false;
 static bool frbump = false;
+static bool rlbump = false;
+static bool rrbump = false;
 
 // function prototypes
 void tape_sensor_init();
@@ -101,12 +109,15 @@ void veer_right();
 void stop();
 void spot_reverse();
 void find_BRB();
+void bump_sensor();
+void bump_sensor_init();
 
 // main
 void setup() {
   Serial.begin(9600);
   tape_sensor_init();
   motor_init();
+  bump_sensor_init();
 }
 
 void tape_sensor_init() {
@@ -125,10 +136,33 @@ void motor_init() {
   pinMode(DIRECTIONR, OUTPUT);
 }
 
+void bump_sensor_init() {
+  pinMode(BUMPPINRL, INPUT);
+  pinMode(BUMPPINRR, INPUT);
+  pinMode(BUMPPINFR, INPUT);
+  pinMode(BUMPPINFL, INPUT);
+}
+
 void loop() {
+  bump_sensor();
   tape_sensor();
-  motor();
-  dev_test();
+  follow_tape();
+  
+  Serial.print("FL bump: ");
+  Serial.print(flbump);
+  Serial.print(", ");
+  Serial.print("FR bump: ");
+  Serial.println(frbump);
+  
+//  motor();
+//  dev_test();
+}
+
+void bump_sensor() {
+  rlbump = digitalRead(BUMPPINRL);
+  rrbump = digitalRead(BUMPPINRR);
+  frbump = digitalRead(BUMPPINFR);
+  flbump = digitalRead(BUMPPINFL);
 }
 
 void tape_sensor() {
@@ -275,10 +309,15 @@ void follow_tape() {
   if (flbump == BUMP || frbump == BUMP) {
     mvmt = STOP;
   } else {
-    if (lout == NOTAPE && rout == NOTAPE) mvmt = FWD;
-    else if (lout == TAPE && rout == NOTAPE) mvmt = RIGHT;
-    else if (lout == NOTAPE && rout == TAPE) mvmt = LEFT;
-    else mvmt = STOP;
+    if (lout == NOTAPE && rout == NOTAPE || 
+        lout == TAPE && rout == TAPE) 
+      mvmt = FWD;
+    else if (lout == TAPE && rout == NOTAPE) 
+      mvmt = LEFT;
+    else if (lout == NOTAPE && rout == TAPE) 
+      mvmt = RIGHT;
+    else 
+      mvmt = STOP;
   }
 
   // execute movement
