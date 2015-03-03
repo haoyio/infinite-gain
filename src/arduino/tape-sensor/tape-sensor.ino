@@ -4,10 +4,10 @@
 #define RIGHTPIN A1
 
 #define NVAL 10
-#define LTHRLO 700
-#define LTHRHI 1000
-#define RTHRLO 700
-#define RTHRHI 1000
+#define LTHRLO 500
+#define LTHRHI 900
+#define RTHRLO 500
+#define RTHRHI 900
 
 static int lvals[NVAL];
 static int ltot = 0;
@@ -61,7 +61,8 @@ void loop() {
   if (lavg > LTHRHI && lout == false) lout = true;
   if (ravg > RTHRHI && rout == false) rout = true;
   
-  delay(1); // for stability
+//  delay(1);
+  delayMicroseconds(1); // for stability
   
   Serial.print(lavg);
   Serial.print(": ");

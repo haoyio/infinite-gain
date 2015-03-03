@@ -6,10 +6,10 @@
 #define RIGHTPIN A1
 
 #define NVAL 10
-#define LTHRLO 700
-#define LTHRHI 1000
-#define RTHRLO 700
-#define RTHRHI 1000
+#define LTHRLO 500
+#define LTHRHI 900
+#define RTHRLO 500
+#define RTHRHI 900
 
 #define TAPE false
 #define NOTAPE true
@@ -24,17 +24,19 @@
 #define DIRECTIONR 11
 #define DIRECTIONL 10
 
-#define ML_HIGH 255  //TODO: mod this until bot goes straight
-#define MR_HIGH 255  //TODO: mod this until bot goes straight
-#define ML_VEER 100  //TODO: mod this until bot veers enough
-#define MR_VEER 100  //TODO: mod this until bot veers enough
+#define ML_HIGH 140        // TODO: mod this until bot goes straight
+#define MR_HIGH 155        // TODO: mod this until bot goes straight
+#define ML_VEER_FAST 90   // TODO: mod this until bot veers enough
+#define MR_VEER_FAST 105   // TODO: mod this until bot veers enough
+#define ML_VEER_SLOW 0     // TODO: mod this until bot veers enough
+#define MR_VEER_SLOW 0     // TODO: mod this until bot veers enough
 #define ML_STOP 0
 #define MR_STOP 0
 
-#define FWD_ML HIGH
-#define FWD_MR LOW
-#define REV_ML LOW
-#define REV_MR HIGH
+#define FWD_ML LOW
+#define FWD_MR HIGH
+#define REV_ML HIGH
+#define REV_MR LOW
 
 #define MANUAL false
 #define AUTO true
@@ -146,16 +148,10 @@ void bump_sensor_init() {
 void loop() {
   bump_sensor();
   tape_sensor();
-  follow_tape();
   
-  Serial.print("FL bump: ");
-  Serial.print(flbump);
-  Serial.print(", ");
-  Serial.print("FR bump: ");
-  Serial.println(frbump);
-  
+  follow_tape(); // remove later after testing
 //  motor();
-//  dev_test();
+  dev_test();
 }
 
 void bump_sensor() {
@@ -188,7 +184,7 @@ void tape_sensor() {
   if (lavg > LTHRHI && lout == TAPE) lout = NOTAPE;
   if (ravg > RTHRHI && rout == TAPE) rout = NOTAPE;
 
-  delay(1); // for moving average stability
+  delayMicroseconds(1); // for moving average stability
 }
 
 void motor() {
@@ -286,15 +282,15 @@ void move_back() {
 void veer_left() {
   digitalWrite(DIRECTIONL, FWD_ML);
   digitalWrite(DIRECTIONR, FWD_MR);
-  analogWrite(ENABLEL, ML_VEER);
-  analogWrite(ENABLER, MR_HIGH);
+  analogWrite(ENABLEL, ML_VEER_SLOW);
+  analogWrite(ENABLER, MR_VEER_FAST);
 }
 
 void veer_right() {
   digitalWrite(DIRECTIONL, FWD_ML);
   digitalWrite(DIRECTIONR, FWD_MR);
-  analogWrite(ENABLEL, ML_HIGH);
-  analogWrite(ENABLER, MR_VEER);
+  analogWrite(ENABLEL, ML_VEER_FAST);
+  analogWrite(ENABLER, MR_VEER_SLOW);
 }
 
 void stop() {
@@ -344,10 +340,20 @@ void follow_tape() {
 }
 
 void dev_test() {
+  Serial.print("FL bump: ");
+  Serial.print(flbump);
+  Serial.print(", ");
+  Serial.print("FR bump: ");
+  Serial.print(frbump);
+  
+  Serial.print(" | ");
+  
+  Serial.print("L tape: ");
   Serial.print(lout);
   Serial.print(": ");
   Serial.print(lavg);
   Serial.print(" | ");
+  Serial.print("R tape: ");
   Serial.print(rout);
   Serial.print(": ");
   Serial.println(ravg);
