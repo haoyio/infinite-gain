@@ -314,19 +314,19 @@ void move_back() {
 }
 
 void veer_left() {
-  digitalWrite(DIRECTIONL, REV_ML);
+  digitalWrite(DIRECTIONL, FWD_ML);
   digitalWrite(DIRECTIONR, FWD_MR);
-  analogWrite(ENABLEL, ML_VEER_FAST);
-  analogWrite(ENABLER, MR_VEER_SLOW);
+  analogWrite(ENABLEL, ML_VEER_SLOW);
+  analogWrite(ENABLER, MR_VEER_FAST);
   delay(ROTATE);
   stop();
 }
 
 void veer_right() {
   digitalWrite(DIRECTIONL, FWD_ML);
-  digitalWrite(DIRECTIONR, REV_MR);
-  analogWrite(ENABLEL, ML_VEER_SLOW);
-  analogWrite(ENABLER, MR_VEER_FAST);
+  digitalWrite(DIRECTIONR, FWD_MR);
+  analogWrite(ENABLEL, ML_VEER_FAST);
+  analogWrite(ENABLER, MR_VEER_SLOW);
   delay(ROTATE);
   stop();
 }
