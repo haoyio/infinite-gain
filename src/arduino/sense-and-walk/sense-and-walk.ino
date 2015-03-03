@@ -1,6 +1,13 @@
 #include "Pulse.h"
 #include <Timers.h>
 
+// timing values
+#define SPOT_REVERSE 5000
+#define ACTIVE_BRAKE 100
+#define SPOT_RIGHT 2000
+#define WAIT_BALL 3000
+#define ROTATE 100
+
 // tape sensor constants
 #define LEFTPIN A0
 #define RIGHTPIN A1
@@ -24,10 +31,13 @@
 #define DIRECTIONR 11
 #define DIRECTIONL 10
 
-#define ML_HIGH 140        // TODO: mod this until bot goes straight
-#define MR_HIGH 155        // TODO: mod this until bot goes straight
-#define ML_VEER_FAST 90   // TODO: mod this until bot veers enough
-#define MR_VEER_FAST 105   // TODO: mod this until bot veers enough
+#define ML_HIGH 255        // TODO: mod this until bot goes straight
+#define MR_HIGH 255        // TODO: mod this until bot goes straight
+#define ML_REV 200
+#define MR_REV 200
+
+#define ML_VEER_FAST 160   // TODO: mod this until bot veers enough
+#define MR_VEER_FAST 160   // TODO: mod this until bot veers enough
 #define ML_VEER_SLOW 0     // TODO: mod this until bot veers enough
 #define MR_VEER_SLOW 0     // TODO: mod this until bot veers enough
 #define ML_STOP 0
@@ -88,11 +98,15 @@ static bool findingBRB = false;
 static bool facingBasket = false;
 static bool onTape = false;
 
+static bool bumped = false;
+static char prev_mvmt = 's';
+
 // bumper module variables
 static bool flbump = false;
 static bool frbump = false;
 static bool rlbump = false;
 static bool rrbump = false;
+static int nbump = 0;
 
 // function prototypes
 void tape_sensor_init();
@@ -113,6 +127,8 @@ void spot_reverse();
 void find_BRB();
 void bump_sensor();
 void bump_sensor_init();
+void active_brake();
+void spot_right();
 
 // main
 void setup() {
@@ -191,10 +207,62 @@ void motor() {
   check_emergency();
   if (mode == AUTO) {
     if (findingMidtape) find_mid_tape();
-    else if (findingBRB) find_BRB();
     else if (onTape) follow_tape();
     else Serial.println("Which SOB led us here?");
   }
+}
+
+void find_mid_tape() { // assumes bot is oriented to "lower wall"
+  if (!lowerWallHit) {
+    if (flbump == BUMP || frbump == BUMP) {
+      lowerWallHit = true;
+      spot_reverse();
+    } else {
+      move_forward();
+    }
+  } else if (lowerWallHit) {
+    if (lout == TAPE || rout == TAPE) {
+      midTapeFound = true;
+      spot_right();
+    } else {
+      move_forward();
+    }
+  } else if (lowerWallHit && midTapeFound) {
+    if (flbump == BUMP || frbump == BUMP) {
+      bumped = true;
+    } else {
+      follow_tape();
+    }
+  } else if (bumped) {
+    nbump++;
+    if (nbump < 3) {
+      delay(WAIT_BALL);
+      bumped = false;
+    } else {
+      findingMidtape = false;
+      nbump = 0;
+      spot_reverse();
+      onTape = true;
+    }
+  } else {
+    Serial.println("Problem with finding mid tape section..."); 
+  }
+}
+
+void spot_right() {
+  digitalWrite(DIRECTIONL, FWD_ML);
+  digitalWrite(DIRECTIONR, REV_MR);
+  analogWrite(ENABLEL, ML_HIGH);
+  analogWrite(ENABLER, MR_HIGH);
+  delay(SPOT_RIGHT);
+}
+
+void spot_reverse() { // on the spot reverse
+  digitalWrite(DIRECTIONL, FWD_ML);
+  digitalWrite(DIRECTIONR, REV_MR);
+  analogWrite(ENABLEL, ML_HIGH);
+  analogWrite(ENABLER, MR_HIGH);
+  delay(SPOT_REVERSE);
 }
 
 void find_BRB() {
@@ -216,41 +284,6 @@ void find_BRB() {
       TMRArd_InitTimer(MAIN_TIMER, TIME_INTERVAL);
     }
   }
-}
-
-void find_mid_tape() { // assumes bot is oriented to "lower wall"
-  if (midTapeFound && lowerWallHit) {
-    veer_right();
-    // if () { //TODO: find some way to determine whether bot is on tape
-    //   findingMidtape = false;
-    //   findingBRB = true;
-    // }
-  } else if (midTapeFound && !lowerWallHit) {
-    veer_left();
-    // if () { //TODO: find some way to determine whether bot is on tape
-    //   findingMidtape = false;
-    //   findingBRB = true;
-    // }
-  } else if (lowerWallHit) {
-    if (lowerWallReversed) {
-      move_forward();
-    } else {
-      //TODO: find some way to determine whether you've reversed and
-      //      facing midtape (roughly)
-      spot_reverse();
-    }
-  } else {
-    move_forward();
-    if (lout == TAPE || rout == TAPE) midTapeFound = true;
-    if (flbump == BUMP || frbump == BUMP) lowerWallHit = true;
-  }
-}
-
-void spot_reverse() { // on the spot reverse
-  digitalWrite(DIRECTIONL, FWD_ML);
-  digitalWrite(DIRECTIONR, REV_MR);
-  analogWrite(ENABLEL, ML_HIGH);
-  analogWrite(ENABLER, MR_HIGH);
 }
 
 void check_emergency() {
@@ -280,17 +313,21 @@ void move_back() {
 }
 
 void veer_left() {
-  digitalWrite(DIRECTIONL, FWD_ML);
+  digitalWrite(DIRECTIONL, REV_ML);
   digitalWrite(DIRECTIONR, FWD_MR);
-  analogWrite(ENABLEL, ML_VEER_SLOW);
+  analogWrite(ENABLEL, ML_VEER_FAST);
   analogWrite(ENABLER, MR_VEER_FAST);
+  stop();
+  delay(ROTATE);
 }
 
 void veer_right() {
   digitalWrite(DIRECTIONL, FWD_ML);
-  digitalWrite(DIRECTIONR, FWD_MR);
+  digitalWrite(DIRECTIONR, REV_MR);
   analogWrite(ENABLEL, ML_VEER_FAST);
-  analogWrite(ENABLER, MR_VEER_SLOW);
+  analogWrite(ENABLER, MR_VEER_FAST);
+  stop();
+  delay(ROTATE);
 }
 
 void stop() {
@@ -300,22 +337,34 @@ void stop() {
   analogWrite(ENABLER, MR_STOP);
 }
 
+void active_brake() {
+  digitalWrite(DIRECTIONL, REV_ML);
+  digitalWrite(DIRECTIONR, REV_MR);
+  analogWrite(ENABLEL, ML_REV);
+  analogWrite(ENABLER, MR_REV);
+  delay(ACTIVE_BRAKE);
+}
+
 void follow_tape() {
   // auto tape-following logic
+  prev_mvmt = mvmt;
   if (flbump == BUMP || frbump == BUMP) {
     mvmt = STOP;
   } else {
     if (lout == NOTAPE && rout == NOTAPE || 
-        lout == TAPE && rout == TAPE) 
+        lout == TAPE && rout == TAPE)
       mvmt = FWD;
     else if (lout == TAPE && rout == NOTAPE) 
       mvmt = LEFT;
     else if (lout == NOTAPE && rout == TAPE) 
       mvmt = RIGHT;
-    else 
+    else
       mvmt = STOP;
   }
-
+  
+  if (prev_mvmt == FWD && mvmt != FWD)
+      active_brake();
+  
   // execute movement
   switch (mvmt) {
     case FWD:
