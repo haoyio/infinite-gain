@@ -7,16 +7,17 @@
 #define SPOT_RIGHT 2000
 #define WAIT_BALL 3000
 #define ROTATE 100
+#define STOP 1
 
 // tape sensor constants
 #define LEFTPIN A0
 #define RIGHTPIN A1
 
 #define NVAL 10
-#define LTHRLO 500
-#define LTHRHI 900
-#define RTHRLO 500
-#define RTHRHI 900
+#define LTHRLO 150
+#define LTHRHI 300
+#define RTHRLO 200
+#define RTHRHI 400
 
 #define TAPE false
 #define NOTAPE true
@@ -36,10 +37,10 @@
 #define ML_REV 200
 #define MR_REV 200
 
-#define ML_VEER_FAST 160   // TODO: mod this until bot veers enough
-#define MR_VEER_FAST 160   // TODO: mod this until bot veers enough
-#define ML_VEER_SLOW 0     // TODO: mod this until bot veers enough
-#define MR_VEER_SLOW 0     // TODO: mod this until bot veers enough
+#define ML_VEER_FAST 180   // TODO: mod this until bot veers enough
+#define MR_VEER_FAST 180   // TODO: mod this until bot veers enough
+#define ML_VEER_SLOW 100   // TODO: mod this until bot veers enough
+#define MR_VEER_SLOW 100   // TODO: mod this until bot veers enough
 #define ML_STOP 0
 #define MR_STOP 0
 
@@ -316,18 +317,18 @@ void veer_left() {
   digitalWrite(DIRECTIONL, REV_ML);
   digitalWrite(DIRECTIONR, FWD_MR);
   analogWrite(ENABLEL, ML_VEER_FAST);
-  analogWrite(ENABLER, MR_VEER_FAST);
-  stop();
+  analogWrite(ENABLER, MR_VEER_SLOW);
   delay(ROTATE);
+  stop();
 }
 
 void veer_right() {
   digitalWrite(DIRECTIONL, FWD_ML);
   digitalWrite(DIRECTIONR, REV_MR);
-  analogWrite(ENABLEL, ML_VEER_FAST);
+  analogWrite(ENABLEL, ML_VEER_SLOW);
   analogWrite(ENABLER, MR_VEER_FAST);
-  stop();
   delay(ROTATE);
+  stop();
 }
 
 void stop() {
@@ -335,6 +336,7 @@ void stop() {
   digitalWrite(DIRECTIONR, FWD_MR);
   analogWrite(ENABLEL, ML_STOP);
   analogWrite(ENABLER, MR_STOP);
+  delay(STOP);
 }
 
 void active_brake() {
