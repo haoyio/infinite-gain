@@ -1,23 +1,30 @@
 #include "Pulse.h"
 #include <Timers.h>
+#include <Servo.h> 
+ 
+// servo stuff
+Servo myservo;  // create servo object to control a servo 
+                // a maximum of eight servo objects can be created 
+int pos = 0;    // variable to store the servo position 
 
 // timing values
 #define SPOT_REVERSE 1000
 #define ACTIVE_BRAKE 100
-#define SPOT_LEFT 1000
-#define WAIT_BALL 6000
-#define ROTATE 100
-#define STOP 100
+#define FWD_LEFT 800
+#define WAIT_BALL 3000
+#define ROTATE 50
+#define STOP 10
+#define BACK_UP 30
 
 // tape sensor constants
 #define LEFTPIN A0
 #define RIGHTPIN A1
 
 #define NVAL 3     // TODO: moving average filter not getting new inputs from tape
-#define LTHRLO 800
-#define LTHRHI 1000
-#define RTHRLO 800
-#define RTHRHI 1000
+#define LTHRLO 750
+#define LTHRHI 900
+#define RTHRLO 750
+#define RTHRHI 900
 
 #define TAPE false
 #define NOTAPE true
@@ -32,18 +39,18 @@
 #define DIRECTIONR 11
 #define DIRECTIONL 10
 
-#define ML_HIGH 185        // TODO: mod this until bot goes straight
-#define MR_HIGH 195        // TODO: mod this until bot goes straight
+#define ML_HIGH 175        // TODO: mod this until bot goes straight
+#define MR_HIGH 185        // TODO: mod this until bot goes straight
 #define ML_REV 190
 #define MR_REV 190
 
-#define ML_VEER_FAST 170   // TODO: mod this until bot veers enough
-#define MR_VEER_FAST 170   // TODO: mod this until bot veers enough
+#define ML_VEER_FAST 195   // TODO: mod this until bot veers enough
+#define MR_VEER_FAST 195   // TODO: mod this until bot veers enough
 #define ML_VEER_SLOW 0   // TODO: mod this until bot veers enough
 #define MR_VEER_SLOW 0   // TODO: mod this until bot veers enough
 #define ML_STOP 0
 #define MR_STOP 0
-#define SPOT_FAST 190
+#define SPOT_FAST 255
 #define SPOT_SLOW 120
 
 #define FWD_ML LOW
@@ -66,11 +73,15 @@
 #define TIME_INTERVAL ONE_SEC
 #define BUMP 1
 
-// bump sensor variables
+// bump sensor constants
 #define BUMPPINRL 12
 #define BUMPPINRR 13
 #define BUMPPINFR 4
 #define BUMPPINFL 3
+
+// servo constants
+#define READY_SHOT 180
+#define SERVO_IN 9
 
 // tape sensor module variables
 static int lvals[NVAL];
@@ -104,7 +115,14 @@ static bool onTape = false;
 static bool bumped = false;
 static char prev_mvmt = 's';
 
-static bool spotReverse = false;
+static bool spotLefting = false;
+static bool spotReversing = false;
+static bool ballsReceived = false;
+static bool firstLefted = false;
+
+static bool firstBacked = false;
+static bool firstReversed = false;
+static bool shotMade = false;
 
 // bumper module variables
 static bool flbump = false;
@@ -129,11 +147,11 @@ void veer_left();
 void veer_right();
 void stop();
 void spot_reverse();
-void find_BRB();
 void bump_sensor();
 void bump_sensor_init();
 void active_brake();
 void fwd_left();
+void get_on_tape();
 
 // main
 void setup() {
@@ -141,6 +159,7 @@ void setup() {
   tape_sensor_init();
   motor_init();
   bump_sensor_init();
+  servo_init();
 }
 
 void tape_sensor_init() {
@@ -166,10 +185,14 @@ void bump_sensor_init() {
   pinMode(BUMPPINFL, INPUT);
 }
 
+void servo_init() {
+  myservo.attach(SERVO_IN);
+  myservo.write(READY_SHOT); 
+}
+
 void loop() {
   bump_sensor();
   tape_sensor();
-  
 //  follow_tape(); // remove later after testing
   motor();
   dev_test();
@@ -211,9 +234,68 @@ void tape_sensor() {
 void motor() {
   check_emergency();
   if (mode == AUTO) {
-    if (findingMidtape) find_mid_tape();
-    else if (onTape) follow_tape();
-    else Serial.println("Which SOB led us here?");
+    if (findingMidtape) 
+      find_mid_tape();
+    else if (ballsReceived)
+      get_on_tape();
+    else if (onTape) {
+      follow_tape();
+      if (flbump == BUMP || frbump == BUMP) {
+        stop();
+        jump_shot();
+        shotMade = true;
+        onTape = false;
+      }
+    } else if (shotMade) {
+      stop();
+      Serial.println("We are done");
+    }
+  }
+}
+
+void jump_shot() {
+  for(pos = 0; pos < 180; pos += 1) {  // goes from 0 degrees to 180 degrees
+    myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+    delay(15);                       // waits 15ms for the servo to reach the position 
+  }
+  
+  for(pos = 80; pos>=1; pos-=1) {   // goes from 120 degrees to 0 degrees 
+    myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+    delay(15);                       // waits 15ms for the servo to reach the position 
+  } 
+  
+  delay(200);
+  // Reset to all the way back
+  myservo.write(READY_SHOT); // Put servo all the say back
+}
+
+void get_on_tape() {
+  // back up a little bit
+  if (!spotReversing && !firstBacked) {
+    move_back();
+    delay(BACK_UP);
+    spotReversing = true;
+    firstBacked = true;
+  }
+  
+  // spot reverse until it hits a tape
+  if (spotReversing && !firstReversed) {
+    spot_reverse();
+    delay(SPOT_REVERSE);    
+    firstReversed = true;
+  } else if (spotReversing && firstReversed) {
+    spot_reverse();
+    if (lout == TAPE || rout == TAPE) {
+      spotReversing = false;
+    }
+  } else {
+    // back up a little bit more
+    move_back();
+    delay(BACK_UP);
+    
+    // get ready for tape following
+    ballsReceived = false;
+    onTape = true;
   }
 }
 
@@ -226,13 +308,21 @@ void find_mid_tape() { // assumes bot is oriented to "lower wall"
     }
   } else if (lowerWallHit && !midTapeFound) {
     if (lout == TAPE || rout == TAPE) {
-      TMRArd_InitTimer(MAIN_TIMER, SPOT_LEFT);
+      move_back();
+      delay(BACK_UP);
+      spotLefting = true;
       midTapeFound = true;
     } else {
       move_back();
     }
-  } else if (!(unsigned char)TMRArd_IsTimerExpired(MAIN_TIMER)) {
+  } else if (spotLefting) {
     fwd_left();
+    if (!firstLefted) 
+      delay(FWD_LEFT);
+      firstLefted = true;
+    if (lout == TAPE || rout == TAPE) {
+      spotLefting = false;
+    }
   } else if (lowerWallHit && midTapeFound && !bumped) {
     if (flbump == BUMP || frbump == BUMP) {
       bumped = true;
@@ -241,19 +331,18 @@ void find_mid_tape() { // assumes bot is oriented to "lower wall"
     }
   } else if (bumped) {
     nbump++;
-    if (nbump < 3) {
+    if (nbump <= 3) {
       stop();
       delay(WAIT_BALL);
       move_back();
       delay(500);
       bumped = false;
+      if (nbump == 3) 
+        bumped = true;
     } else {
-      stop();
-      Serial.println("Stopping the robot");
-//      findingMidtape = false;
-//      nbump = 0;
-//      spot_reverse();
-//      onTape = true;
+      findingMidtape = false;
+      nbump = 0;
+      ballsReceived = true;
     }
   } else {
     Serial.println("Problem with finding mid tape section..."); 
@@ -272,27 +361,6 @@ void spot_reverse() { // on the spot reverse
   digitalWrite(DIRECTIONR, REV_MR);
   analogWrite(ENABLEL, ML_HIGH);
   analogWrite(ENABLER, MR_HIGH);
-}
-
-void find_BRB() {
-  if (brbFound) {
-    if ((unsigned char)TMRArd_IsTimerExpired(MAIN_TIMER)) { 
-      if (brbReversed) {
-        findingBRB = false;
-        facingBasket = true;
-      } else {
-        //TODO: find some way to determine whether you've reversed 
-        //      and on tape
-        spot_reverse();
-      }
-    }
-  } else {
-    follow_tape();
-    if (flbump == BUMP || frbump == BUMP) {
-      brbFound = true;
-      TMRArd_InitTimer(MAIN_TIMER, TIME_INTERVAL);
-    }
-  }
 }
 
 void check_emergency() {
