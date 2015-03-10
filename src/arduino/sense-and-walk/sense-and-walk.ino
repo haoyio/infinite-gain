@@ -80,6 +80,7 @@ int pos = 0;    // variable to store the servo position
 #define BUMPPINFL 3
 
 // servo constants
+#define RELEASE_SHOT 0
 #define READY_SHOT 180
 #define SERVO_IN 9
 
@@ -245,25 +246,53 @@ void motor() {
         jump_shot();
         shotMade = true;
         onTape = false;
+        spotReversing = true;
+        firstReversed = false;
       }
     } else if (shotMade) {
-      stop();
-      Serial.println("We are done");
+      // spot reverse and get back onto tape
+      if (spotReversing && !firstReversed) {
+        spot_reverse();
+        delay(SPOT_REVERSE);    
+        firstReversed = true;
+      } else if (spotReversing && firstReversed) {
+        spot_reverse();
+        if (lout == TAPE || rout == TAPE) {
+          spotReversing = false;
+        }
+      } else {
+        // back up a little bit more
+        move_back();
+        delay(BACK_UP);
+        
+        // get ready for tape following
+        shotMade = false;
+        ballsReceived = false;
+        onTape = false;
+        findingMidtape = true;
+
+        // redefine parameters to use previous code
+        lowerWallHit = true;
+        midTapeFound = true;
+        spotLefting = false;
+        bumped = false;
+      }
+      
     }
   }
 }
 
 void jump_shot() {
-  for(pos = 0; pos < 180; pos += 1) {  // goes from 0 degrees to 180 degrees
-    myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-    delay(15);                       // waits 15ms for the servo to reach the position 
-  }
+  // for(pos = 0; pos < 180; pos += 1) {  // goes from 0 degrees to 180 degrees
+  //   myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+  //   delay(15);                       // waits 15ms for the servo to reach the position 
+  // }
   
-  for(pos = 80; pos>=1; pos-=1) {   // goes from 120 degrees to 0 degrees 
-    myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-    delay(15);                       // waits 15ms for the servo to reach the position 
-  } 
-  
+  // for(pos = 80; pos>=1; pos-=1) {   // goes from 120 degrees to 0 degrees 
+  //   myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+  //   delay(15);                       // waits 15ms for the servo to reach the position 
+  // } 
+  myservo.write(RELEASE_SHOT);
   delay(200);
   // Reset to all the way back
   myservo.write(READY_SHOT); // Put servo all the say back
