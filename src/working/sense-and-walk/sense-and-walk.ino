@@ -20,7 +20,7 @@ int pos = 0;    // variable to store the servo position
 #define LEFTPIN A0
 #define RIGHTPIN A1
 
-#define NVAL 3     // TODO: moving average filter not getting new inputs from tape
+#define NVAL 5
 #define LTHRLO 750
 #define LTHRHI 900
 #define RTHRLO 750
