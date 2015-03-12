@@ -1411,13 +1411,11 @@ These are standard SMD and PTH capacitors. Normally 10uF, 47uF, and 100uF in ele
 </classes>
 <parts>
 <part name="FRAME1" library="frames" deviceset="A4L-LOC" device=""/>
-<part name="BUMP_SENSOR" library="con-molex" deviceset="22-23-2031" device="" value=""/>
 <part name="J1" library="ME210Lib_2015_v2" deviceset="ARDUINO_R3_SHIELD" device="" value="ARDUINO_uno"/>
 <part name="C1" library="ME210Lib_2015_v2" deviceset="CAP_POL" device="1206" value="1uF"/>
 <part name="GND1" library="supply1" deviceset="GND" device=""/>
 <part name="BUMP_SENSOR1" library="con-molex" deviceset="22-23-2031" device="" value=""/>
 <part name="BUMP_SENSOR2" library="con-molex" deviceset="22-23-2031" device="" value=""/>
-<part name="BUMP_SENSOR3" library="con-molex" deviceset="22-23-2031" device="" value=""/>
 </parts>
 <sheets>
 <sheet>
@@ -1425,9 +1423,6 @@ These are standard SMD and PTH capacitors. Normally 10uF, 47uF, and 100uF in ele
 </plain>
 <instances>
 <instance part="FRAME1" gate="G$1" x="0" y="0"/>
-<instance part="BUMP_SENSOR" gate="-1" x="160.02" y="104.14"/>
-<instance part="BUMP_SENSOR" gate="-2" x="160.02" y="101.6"/>
-<instance part="BUMP_SENSOR" gate="-3" x="160.02" y="99.06"/>
 <instance part="J1" gate="G$1" x="124.46" y="99.06"/>
 <instance part="C1" gate="G$1" x="104.14" y="86.36"/>
 <instance part="GND1" gate="1" x="96.52" y="73.66"/>
@@ -1437,9 +1432,6 @@ These are standard SMD and PTH capacitors. Normally 10uF, 47uF, and 100uF in ele
 <instance part="BUMP_SENSOR2" gate="-1" x="160.02" y="116.84"/>
 <instance part="BUMP_SENSOR2" gate="-2" x="160.02" y="114.3"/>
 <instance part="BUMP_SENSOR2" gate="-3" x="160.02" y="111.76"/>
-<instance part="BUMP_SENSOR3" gate="-1" x="160.02" y="129.54"/>
-<instance part="BUMP_SENSOR3" gate="-2" x="160.02" y="127"/>
-<instance part="BUMP_SENSOR3" gate="-3" x="160.02" y="124.46"/>
 </instances>
 <busses>
 </busses>
@@ -1457,9 +1449,7 @@ These are standard SMD and PTH capacitors. Normally 10uF, 47uF, and 100uF in ele
 </net>
 <net name="N$3" class="0">
 <segment>
-<pinref part="BUMP_SENSOR" gate="-3" pin="S"/>
-<wire x1="157.48" y1="99.06" x2="144.78" y2="99.06" width="0.1524" layer="91"/>
-<wire x1="144.78" y1="99.06" x2="144.78" y2="83.82" width="0.1524" layer="91"/>
+<wire x1="144.78" y1="111.76" x2="144.78" y2="83.82" width="0.1524" layer="91"/>
 <wire x1="144.78" y1="83.82" x2="144.78" y2="63.5" width="0.1524" layer="91"/>
 <wire x1="144.78" y1="63.5" x2="106.68" y2="63.5" width="0.1524" layer="91"/>
 <wire x1="106.68" y1="63.5" x2="106.68" y2="76.2" width="0.1524" layer="91"/>
@@ -1470,12 +1460,6 @@ These are standard SMD and PTH capacitors. Normally 10uF, 47uF, and 100uF in ele
 <junction x="144.78" y="83.82"/>
 <pinref part="BUMP_SENSOR2" gate="-3" pin="S"/>
 <wire x1="157.48" y1="111.76" x2="144.78" y2="111.76" width="0.1524" layer="91"/>
-<wire x1="144.78" y1="111.76" x2="144.78" y2="99.06" width="0.1524" layer="91"/>
-<junction x="144.78" y="99.06"/>
-<pinref part="BUMP_SENSOR3" gate="-3" pin="S"/>
-<wire x1="157.48" y1="124.46" x2="144.78" y2="124.46" width="0.1524" layer="91"/>
-<wire x1="144.78" y1="124.46" x2="144.78" y2="111.76" width="0.1524" layer="91"/>
-<junction x="144.78" y="111.76"/>
 </segment>
 </net>
 <net name="GND" class="0">
@@ -1498,27 +1482,11 @@ These are standard SMD and PTH capacitors. Normally 10uF, 47uF, and 100uF in ele
 </net>
 <net name="N$2" class="0">
 <segment>
-<pinref part="BUMP_SENSOR" gate="-2" pin="S"/>
-<pinref part="J1" gate="G$1" pin="*D5"/>
-<wire x1="157.48" y1="101.6" x2="137.16" y2="101.6" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$6" class="0">
-<segment>
 <pinref part="BUMP_SENSOR2" gate="-2" pin="S"/>
-<wire x1="157.48" y1="114.3" x2="152.4" y2="114.3" width="0.1524" layer="91"/>
-<wire x1="152.4" y1="114.3" x2="152.4" y2="104.14" width="0.1524" layer="91"/>
-<pinref part="J1" gate="G$1" pin="D4"/>
-<wire x1="152.4" y1="104.14" x2="137.16" y2="104.14" width="0.1524" layer="91"/>
-</segment>
-</net>
-<net name="N$7" class="0">
-<segment>
-<pinref part="BUMP_SENSOR3" gate="-2" pin="S"/>
-<wire x1="157.48" y1="127" x2="149.86" y2="127" width="0.1524" layer="91"/>
-<wire x1="149.86" y1="127" x2="149.86" y2="106.68" width="0.1524" layer="91"/>
-<pinref part="J1" gate="G$1" pin="*D3"/>
-<wire x1="149.86" y1="106.68" x2="137.16" y2="106.68" width="0.1524" layer="91"/>
+<wire x1="157.48" y1="114.3" x2="142.24" y2="114.3" width="0.1524" layer="91"/>
+<wire x1="142.24" y1="114.3" x2="142.24" y2="88.9" width="0.1524" layer="91"/>
+<pinref part="J1" gate="G$1" pin="*D10"/>
+<wire x1="142.24" y1="88.9" x2="137.16" y2="88.9" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
