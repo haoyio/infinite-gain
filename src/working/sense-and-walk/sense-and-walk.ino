@@ -135,7 +135,7 @@ static int nbump = 0;
 // function prototypes
 void tape_sensor_init();
 void motor_init();
-void tape_sensor();
+void measure_tape();
 void motor();
 void check_emergency();
 void follow_tape();
@@ -153,6 +153,7 @@ void bump_sensor_init();
 void active_brake();
 void fwd_left();
 void get_on_tape();
+void take_shot();
 
 // main
 void setup() {
@@ -193,7 +194,7 @@ void servo_init() {
 
 void loop() {
   bump_sensor();
-  tape_sensor();
+  measure_tape();
 //  follow_tape(); // remove later after testing
   motor();
   dev_test();
@@ -206,7 +207,7 @@ void bump_sensor() {
   flbump = digitalRead(BUMPPINFL);
 }
 
-void tape_sensor() {
+void measure_tape() {
   // left tape sensor
   ltot -= lvals[lidx];
   lvals[lidx] = analogRead(LEFTPIN);
@@ -243,7 +244,7 @@ void motor() {
       follow_tape();
       if (flbump == BUMP || frbump == BUMP) {
         stop();
-        jump_shot();
+        dt_shot();
         shotMade = true;
         onTape = false;
         spotReversing = true;
@@ -282,7 +283,7 @@ void motor() {
   }
 }
 
-void jump_shot() {
+void take_shot() {
   // for(pos = 0; pos < 180; pos += 1) {  // goes from 0 degrees to 180 degrees
   //   myservo.write(pos);              // tell servo to go to position in variable 'pos' 
   //   delay(15);                       // waits 15ms for the servo to reach the position 
