@@ -133,7 +133,7 @@ static bool rrbump = false;
 static int nbump = 0;
 
 // function prototypes
-void tape_sensor_init();
+void init_tape();
 void motor_init();
 void measure_tape();
 void motor();
@@ -148,8 +148,8 @@ void veer_left();
 void veer_right();
 void stop();
 void spot_reverse();
-void bump_sensor();
-void bump_sensor_init();
+void measure_bump();
+void init_bump();
 void active_brake();
 void fwd_left();
 void get_on_tape();
@@ -158,13 +158,13 @@ void take_shot();
 // main
 void setup() {
   Serial.begin(9600);
-  tape_sensor_init();
+  init_tape();
   motor_init();
-  bump_sensor_init();
+  init_bump();
   servo_init();
 }
 
-void tape_sensor_init() {
+void init_tape() {
   pinMode(LEFTPIN, INPUT);
   pinMode(RIGHTPIN, INPUT);
   for (int iVal = 0; iVal < NVAL; iVal++) {
@@ -180,7 +180,7 @@ void motor_init() {
   pinMode(DIRECTIONR, OUTPUT);
 }
 
-void bump_sensor_init() {
+void init_bump() {
   pinMode(BUMPPINRL, INPUT);
   pinMode(BUMPPINRR, INPUT);
   pinMode(BUMPPINFR, INPUT);
@@ -193,14 +193,14 @@ void servo_init() {
 }
 
 void loop() {
-  bump_sensor();
+  measure_bump();
   measure_tape();
 //  follow_tape(); // remove later after testing
   motor();
   dev_test();
 }
 
-void bump_sensor() {
+void measure_bump() {
   rlbump = digitalRead(BUMPPINRL);
   rrbump = digitalRead(BUMPPINRR);
   frbump = digitalRead(BUMPPINFR);
